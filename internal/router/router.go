@@ -7,8 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRoutes(r *gin.Engine) {
+func RegisterRoutes(r *gin.Engine, userHandler *handlers.UserHandler) {
 	v1 := r.Group("/api/v1", middleware.Logger())
-	v1.GET("/health", handlers.GetHealth)
-	v1.POST("/photos",handl)
+	{
+		v1.GET("/health", handlers.GetHealth)
+		users := v1.Group("/users")
+		{
+			users.POST("", userHandler.SignUpUser)
+		}
+	}
+
 }

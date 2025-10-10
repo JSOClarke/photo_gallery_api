@@ -1,18 +1,43 @@
 package main
 
 import (
+	"fmt"
+	"log"
+	"os"
+	"photogallery/internal/handlers"
+	"photogallery/internal/pkg/db"
 	"photogallery/internal/router"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
+func ServerSetup(st *handlers.UserHandler) *gin.Engine {
+	r := gin.Default()
+	router.RegisterRoutes(r, st)
+	return r
+}
+
 func main() {
-	r := gin.Default() // creates the instance of of the engine // This wraps hte middleware, muxer and confiugation settings
 
-	// r.GET("/health", func(ctx *gin.Context) { // this acts like a  blanket for the specific htptp method and the path that is requested with it
-	// 	ctx.JSON(http.StatusOK, gin.H{"message": "Your boys eat butt"})
-	// })
+	if err := godotenv.Load(); err != nil {
+		log.Fatal(".Env could not be loaded", err)
+	}
 
-	router.RegisterRoutes(r)
-	r.Run()
+	connStr := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		os.Getenv("PG_HOST"),
+		os.Getenv("PG_PORT"),
+		os.Getenv("PG_USER"),
+		os.Getenv("PG_PASSWORD"),
+		os.Getenv("PG_DBNAME"),
+	)
+
+	database := db.Connect(connStr)
+	defer database.Close()
+
+	handlers := handlers.NewUserHandler(database)
+
+	r := ServerSetup(handlers)
+	r.Run(":4001")
 }
