@@ -6,7 +6,9 @@ import (
 	"os"
 	"photogallery/internal/handlers"
 	"photogallery/internal/pkg/db"
+	"photogallery/internal/repository"
 	"photogallery/internal/router"
+	"photogallery/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -35,8 +37,9 @@ func main() {
 
 	database := db.Connect(connStr)
 	defer database.Close()
-
-	handlers := handlers.NewUserHandler(database)
+	userRep := repository.NewRepoService(database)
+	userService := services.NewUserService(userRep)
+	handlers := handlers.NewUserHandler(userService)
 
 	r := ServerSetup(handlers)
 	r.Run(":4001")

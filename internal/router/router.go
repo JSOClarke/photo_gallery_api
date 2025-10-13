@@ -13,7 +13,11 @@ func RegisterRoutes(r *gin.Engine, userHandler *handlers.UserHandler) {
 		v1.GET("/health", handlers.GetHealth)
 		users := v1.Group("/users")
 		{
-			users.POST("", userHandler.SignUpUser)
+			users.POST("/signup", userHandler.SignUpUser)
+		}
+		photos := v1.Group("/photos")
+		{
+			photos.GET(":")
 		}
 	}
 
