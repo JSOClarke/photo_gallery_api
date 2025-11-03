@@ -39,8 +39,8 @@ func main() {
 	defer database.Close()
 	userRep := repository.NewRepoService(database)
 	userService := services.NewUserService(userRep)
-	handlers := handlers.NewUserHandler(userService)
-
-	r := ServerSetup(handlers)
+	userHandlers := handlers.NewUserHandler(userService)
+	// photoHandlers := handlers.NewPhotoHandler()
+	r := ServerSetup(userHandlers)
 	r.Run(":4001")
 }

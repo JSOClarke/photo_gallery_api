@@ -10,6 +10,7 @@ import (
 
 type UserServiceInterface interface {
 	CreateUser(models.LoginRequest) ([]byte, error)
+	LoginUser(models.LoginRequest) ([]byte, error)
 }
 
 type UserService struct {
@@ -32,6 +33,26 @@ func (us *UserService) CreateUser(login models.LoginRequest) ([]byte, error) {
 		return nil, err
 	}
 	return repo_response, nil
+}
+
+// Returns token when check against username and password in DB
+func (us *UserService) LoginUser(login models.LoginRequest) ([]byte, error) {
+	//
+
+	password_hash, err := us.Repo.LoginUser(login.Username)
+	if err != nil {
+		return nil, err
+	}
+
+	err = CompareHashAndPassword(password_hash, []byte(login.Password))
+	if err != nil {
+		return nil, err
+	}
+	token, err := CreateToken([]byte(login.Username))
+	if err != nil {
+		return nil, err
+	}
+	return token, nil
 }
 
 func hashPassword(password []byte) ([]byte, error) {
@@ -59,4 +80,12 @@ func CreateToken(username []byte) ([]byte, error) {
 		panic("Not able to sign the token")
 	}
 	return []byte(signedToken), nil
+}
+
+func CompareHashAndPassword(password_hash, password []byte) error {
+	err := bcrypt.CompareHashAndPassword(password_hash, password)
+	if err != nil {
+		return err
+	}
+	return nil
 }
