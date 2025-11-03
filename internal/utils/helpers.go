@@ -4,37 +4,37 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"photogallery/internal/models"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 )
 
 // Create a model and tests for this.
-func VerifyJWT(tok string) (jwt.MapClaims, error) {
-
+func VerifyJWT(tok string) (models.Claims, error) {
 	err := godotenv.Load()
 	if err != nil {
-		return nil, err
+		return models.Claims{}, err
 	}
-	token, err := jwt.Parse(tok, func(t *jwt.Token) (interface{}, error) {
-		// check signing method
+
+	claims := &models.Claims{} // pointer is required here
+	token, err := jwt.ParseWithClaims(tok, claims, func(t *jwt.Token) (interface{}, error) {
+		// Check signing method
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 		}
-
-		// return the key to use for verification
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
 	if err != nil {
-		return nil, err
+		return models.Claims{}, err
 	}
 
 	if !token.Valid {
-		return nil, errors.New("Token provided doesnt not match jwt secret")
+		return models.Claims{}, errors.New("token provided does not match jwt secret")
 	}
-	claims := token.Claims.(jwt.MapClaims)
-	return claims, nil
 
+	return *claims, nil // dereference before returning
 }
 
 func CreateToken(username string) (string, error) {
@@ -43,7 +43,7 @@ func CreateToken(username string) (string, error) {
 		return "", err
 	}
 
-	claims := jwt.MapClaims{"username": username}
+	claims := models.Claims{Username: username, RegisteredClaims: jwt.RegisteredClaims{IssuedAt: jwt.NewNumericDate(time.Now()), ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour))}}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 

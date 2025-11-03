@@ -2,13 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
+	"photogallery/internal/models"
 	"photogallery/internal/services"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 type PhotoHandler struct {
@@ -26,9 +25,9 @@ func (ph *PhotoHandler) GetAllPhotos(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "token claims do not exist"})
 		return
 	}
-	claims := val.(jwt.MapClaims)
-	username := claims["username"].([]byte)
-	service, err := ph.Service.GetAllPhotos(username)
+	claims := val.(models.Claims)
+	username := claims.Username
+	service, err := ph.Service.GetAllPhotos([]byte(username))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -45,7 +44,6 @@ func (ph *PhotoHandler) GetAllPhotos(c *gin.Context) {
 // Gets the given photo from the database by provided ID pararm
 func (ph *PhotoHandler) GetPhoto(c *gin.Context) {
 	id, isFound := c.Params.Get("id")
-	fmt.Println("param", id)
 
 	if isFound == false {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect parameter passed"})

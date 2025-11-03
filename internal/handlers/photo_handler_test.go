@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"photogallery/internal/models"
 	"photogallery/internal/repository"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,8 +19,11 @@ type MockPhotoService struct {
 	Called bool
 }
 
+const SUCCESS = 7
+const FAILURE = 666
+
 func (ps *MockPhotoService) GetPhoto(param int) ([]byte, string, error) {
-	if param == 20 {
+	if param == SUCCESS {
 		return []byte("Jordan"), "image/jpeg", nil
 	}
 
@@ -34,44 +40,43 @@ func (ps *MockPhotoService) GetAllPhotos(username []byte) ([]repository.GetPhoto
 }
 
 func TestGetPhoto_SUCCESS(t *testing.T) {
-	r := gin.Default()
+	// r := gin.Default()
 	mockService := MockPhotoService{}
-
 	photoHandlerx := PhotoHandler{Service: &mockService}
 
-	r.GET("/testGetPhoto/:id", photoHandlerx.GetPhoto)
+	// r.GET("/testGetPhoto/:id", photoHandlerx.GetPhoto)
 	w := httptest.NewRecorder()
-
-	req, err := http.NewRequest(http.MethodGet, "/testGetPhoto/20", nil)
-	if err != nil {
-		panic("Not able to create request, test invalid")
-	}
+	c, _ := gin.CreateTestContext(w)
+	c.Params = gin.Params{gin.Param{Key: "id", Value: fmt.Sprint(SUCCESS)}}
+	req := &http.Request{}
+	c.Request = req
 	//	The body response with the image
 	// The fake write object that will record what is being written inside like the body etc
-	r.ServeHTTP(w, req)
+	// r.ServeHTTP(w, req)
+	photoHandlerx.GetPhoto(c)
 
 	assert.Equal(t, 200, w.Code)
 	assert.Equal(t, "image/jpeg", w.Header().Get("Content-type"))
 
 }
-func TestGetPhoto_FAILURE(t *testing.T) {
-	r := gin.Default()
+func TestGetPhoto_Failure(t *testing.T) {
+	// r := gin.Default()
 	mockService := MockPhotoService{}
-
 	photoHandlerx := PhotoHandler{Service: &mockService}
 
-	r.GET("/testGetPhoto/:id", photoHandlerx.GetPhoto)
+	// r.GET("/testGetPhoto/:id", photoHandlerx.GetPhoto)
 	w := httptest.NewRecorder()
-
-	req, err := http.NewRequest(http.MethodGet, "/testGetPhoto/101", nil)
-	if err != nil {
-		panic("Not able to create request, test invalid")
-	}
+	c, _ := gin.CreateTestContext(w)
+	c.Params = gin.Params{gin.Param{Key: "id", Value: fmt.Sprint(FAILURE)}}
+	req := &http.Request{}
+	c.Request = req
 	//	The body response with the image
 	// The fake write object that will record what is being written inside like the body etc
-	r.ServeHTTP(w, req)
+	// r.ServeHTTP(w, req)
+	photoHandlerx.GetPhoto(c)
 
 	assert.Equal(t, 400, w.Code)
+	// assert.Equal(t, "image/jpeg", w.Header().Get("Content-type"))
 
 }
 
@@ -98,27 +103,31 @@ func TestGetAllPhoto_NoClaims_Failure(t *testing.T) {
 func TestGetAllPhoto_SUCCESS(t *testing.T) {
 	r := gin.Default()
 	mockService := MockPhotoService{}
-
 	photoHandlerx := PhotoHandler{Service: &mockService}
 	endpoint := "/testGetAllPhotos"
-	r.GET(endpoint, photoHandlerx.GetAllPhotos)
+
+	claims := models.Claims{
+		Username: "Jordan",
+		RegisteredClaims: jwt.RegisteredClaims{
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+		},
+	}
+
+	// Wrap your handler in a function that injects claims
+	r.GET(endpoint, func(c *gin.Context) {
+		c.Set("claims", claims)
+		photoHandlerx.GetAllPhotos(c)
+	})
+
 	w := httptest.NewRecorder()
-
-	c, _ := gin.CreateTestContext(w)
-
 	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
-		panic("Not able to create request, test invalid")
+		t.Fatal(err)
 	}
-	c.Request = req
 
-	// c.Set()
-
-	//	The body response with the image
-	// The fake write object that will record what is being written inside like the body etc
 	r.ServeHTTP(w, req)
-	// fmt.Println("error", w.Body.String())
-	assert.Equal(t, 200, w.Code)
-	fmt.Println(w.Body)
-	// assert.Contains(t, w.Body.String(), "claims do not exist")
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	fmt.Println("Response:", w.Body.String())
 }

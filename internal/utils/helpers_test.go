@@ -3,6 +3,8 @@ package utils
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateToken(t *testing.T) {
@@ -15,16 +17,16 @@ func TestCreateToken(t *testing.T) {
 
 }
 
+// Tests for claims username
 func TestVerifyToken(t *testing.T) {
-	data := "jordan"
+	data := "Jordan"
 	token, err := CreateToken(data)
 	if err != nil {
 		t.Error("not a valid test anyways", err.Error())
 	}
-	mapClaims, err := VerifyJWT(string(token))
+	claims, err := VerifyJWT(string(token))
 	if err != nil {
 		t.Error("not a valid test anyways", err.Error())
 	}
-	fmt.Println("claims", mapClaims)
-	fmt.Println(mapClaims["username"])
+	assert.Equal(t, "Jordan", claims.Username)
 }
