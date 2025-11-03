@@ -14,9 +14,9 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func ServerSetup(st *handlers.UserHandler) *gin.Engine {
+func ServerSetup(st *handlers.UserHandler, ph *handlers.PhotoHandler) *gin.Engine {
 	r := gin.Default()
-	router.RegisterRoutes(r, st)
+	router.RegisterRoutes(r, st, ph)
 	return r
 }
 
@@ -40,7 +40,9 @@ func main() {
 	userRep := repository.NewRepoService(database)
 	userService := services.NewUserService(userRep)
 	userHandlers := handlers.NewUserHandler(userService)
-	// photoHandlers := handlers.NewPhotoHandler()
-	r := ServerSetup(userHandlers)
+	photoRepo := repository.NewPhotoRepo(database)
+	photoService := services.NewPhotoService(photoRepo)
+	photoHandlers := handlers.NewPhotoHandler(photoService)
+	r := ServerSetup(userHandlers, photoHandlers)
 	r.Run(":4001")
 }

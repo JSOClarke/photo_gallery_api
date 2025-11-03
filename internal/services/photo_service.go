@@ -11,10 +11,11 @@ type PhotoServiceInterface interface {
 }
 
 type PhotoService struct {
-	Repo repository.PhotoRepo
+	Repo repository.PhotoRepoInterface
 }
 
-type NewPhotoService struct {
+func NewPhotoService(repo *repository.PhotoRepo) *PhotoService {
+	return &PhotoService{Repo: repo}
 }
 
 func (ps *PhotoService) GetPhoto(param int) ([]byte, string, error) {

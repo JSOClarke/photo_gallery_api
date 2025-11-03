@@ -14,8 +14,8 @@ type PhotoHandler struct {
 	Service services.PhotoServiceInterface
 }
 
-func NewPhotoHandler(service services.PhotoService) *PhotoHandler {
-	return &PhotoHandler{Service: &service}
+func NewPhotoHandler(service *services.PhotoService) *PhotoHandler {
+	return &PhotoHandler{Service: service}
 }
 
 func (ph *PhotoHandler) GetAllPhotos(c *gin.Context) {

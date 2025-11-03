@@ -10,7 +10,7 @@ import (
 
 func Authentication(g *gin.Context) {
 
-	auth_header := g.Writer.Header().Get("Authorization")
+	auth_header := g.Request.Header.Get("Authorization")
 	if auth_header == "" {
 		g.JSON(http.StatusUnauthorized, gin.H{"error": "auth headers not provided"})
 		g.Abort()

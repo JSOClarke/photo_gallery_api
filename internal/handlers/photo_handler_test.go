@@ -101,10 +101,8 @@ func TestGetAllPhoto_NoClaims_Failure(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "claims do not exist")
 }
 func TestGetAllPhoto_SUCCESS(t *testing.T) {
-	r := gin.Default()
 	mockService := MockPhotoService{}
 	photoHandlerx := PhotoHandler{Service: &mockService}
-	endpoint := "/testGetAllPhotos"
 
 	claims := models.Claims{
 		Username: "Jordan",
@@ -114,20 +112,14 @@ func TestGetAllPhoto_SUCCESS(t *testing.T) {
 		},
 	}
 
-	// Wrap your handler in a function that injects claims
-	r.GET(endpoint, func(c *gin.Context) {
-		c.Set("claims", claims)
-		photoHandlerx.GetAllPhotos(c)
-	})
-
 	w := httptest.NewRecorder()
-	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	r.ServeHTTP(w, req)
+	c, _ := gin.CreateTestContext(w)
+	c.Set("claims", claims)
+	c.Request = &http.Request{}
+	photoHandlerx.GetAllPhotos(c)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	fmt.Println("Response:", w.Body.String())
 }
+
+// we are able to create gin test.contexts so that we dont have to deal with router.

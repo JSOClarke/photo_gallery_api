@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRoutes(r *gin.Engine, userHandler *handlers.UserHandler) {
+func RegisterRoutes(r *gin.Engine, userHandler *handlers.UserHandler, photoHandler *handlers.PhotoHandler) {
 	v1 := r.Group("/api/v1")
 	{
 		v1.GET("/health", handlers.GetHealth)
@@ -20,8 +20,8 @@ func RegisterRoutes(r *gin.Engine, userHandler *handlers.UserHandler) {
 		{
 			photos.POST("/upload")
 
-			photos.GET("/images", userHandler.LoginUser)
-			photos.GET("/image/:id")
+			photos.GET("/images", photoHandler.GetAllPhotos)
+			photos.GET("/image/:id", photoHandler.GetPhoto)
 			photos.POST("/transform/:id")
 
 		}
