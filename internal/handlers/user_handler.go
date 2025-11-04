@@ -62,6 +62,6 @@ func (uh *UserHandler) LoginUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusAccepted, gin.H{"token": service})
+	c.JSON(http.StatusAccepted, service)
 
 }

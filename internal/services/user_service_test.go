@@ -23,16 +23,16 @@ func (mr *MockRepo) CreateUser(username, password string) ([]byte, error) {
 	return []byte(username), mr.Error
 }
 
-func (mr *MockRepo) LoginUser(username string) ([]byte, error) {
+func (mr *MockRepo) LoginUser(username string) (string, error) {
 	mr.Called = true
 	if username == "fail" {
-		return nil, errors.New("username not found")
+		return "", errors.New("username not found")
 	}
 	token, err := hashPassword([]byte("securepassword"))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return token, nil
+	return string(token), nil
 }
 
 func TestCreateUser_SUCCESS(t *testing.T) {
@@ -89,15 +89,4 @@ func TestPasswordHash(t *testing.T) {
 
 	assert.NotEqual(t, password_plain, res)
 	assert.NoError(t, bcrypt.CompareHashAndPassword(res, []byte(password_plain)))
-}
-
-func TestCreateToken(t *testing.T) {
-
-	username := []byte("Jordan")
-
-	token, err := CreateToken(username)
-
-	assert.NoError(t, err)
-	// fmt.Println("token", string(token))
-	assert.NotEqual(t, token, username)
 }

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,10 +15,11 @@ func TestCreateToken(t *testing.T) {
 		t.Errorf("not a valid test anyways")
 	}
 	fmt.Println("token: ", string(token))
+	assert.GreaterOrEqual(t, len(token), 100)
+	assert.Equal(t, 3, len(strings.Split(token, ".")))
 
 }
 
-// Tests for claims username
 func TestVerifyToken(t *testing.T) {
 	data := "Jordan"
 	token, err := CreateToken(data)
@@ -28,5 +30,6 @@ func TestVerifyToken(t *testing.T) {
 	if err != nil {
 		t.Error("not a valid test anyways", err.Error())
 	}
+	fmt.Println("claims ->", claims)
 	assert.Equal(t, "Jordan", claims.Username)
 }

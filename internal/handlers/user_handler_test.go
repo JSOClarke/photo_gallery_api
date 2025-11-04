@@ -35,18 +35,18 @@ func (us *MockService) CreateUser(login models.LoginRequest) ([]byte, error) {
 	return []byte(login.Username), us.Err
 }
 
-func (us *MockService) LoginUser(login models.LoginRequest) ([]byte, error) {
+func (us *MockService) LoginUser(login models.LoginRequest) (string, error) {
 	us.Called = true
 	if login.Username == "fail" {
-		return nil, errors.New("Name not found in the database")
+		return "", errors.New("Name not found in the database")
 	}
 
-	token := []byte(`"token":"tokensystem"`)
+	token := "tokensystem"
 
 	if login.Username == "token" {
 		return token, nil
 	}
-	return []byte(login.Username), nil
+	return login.Username, nil
 }
 func TestSignUpUser_SUCCESS(t *testing.T) {
 	gin.SetMode(gin.TestMode)
@@ -131,6 +131,7 @@ func TestLoginUser_SUCCESS(t *testing.T) {
 
 	assert.Equal(t, http.StatusAccepted, w.Code)
 	assert.Contains(t, w.Body.String(), "token")
+	fmt.Println("token", w.Body.String())
 
 }
 

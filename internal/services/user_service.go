@@ -3,14 +3,14 @@ package services
 import (
 	"photogallery/internal/models"
 	"photogallery/internal/repository"
+	"photogallery/internal/utils"
 
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UserServiceInterface interface {
 	CreateUser(models.LoginRequest) ([]byte, error)
-	LoginUser(models.LoginRequest) ([]byte, error)
+	LoginUser(models.LoginRequest) (string, error)
 }
 
 type UserService struct {
@@ -36,21 +36,21 @@ func (us *UserService) CreateUser(login models.LoginRequest) ([]byte, error) {
 }
 
 // Returns token when check against username and password in DB
-func (us *UserService) LoginUser(login models.LoginRequest) ([]byte, error) {
+func (us *UserService) LoginUser(login models.LoginRequest) (string, error) {
 	//
 
 	password_hash, err := us.Repo.LoginUser(login.Username)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	err = CompareHashAndPassword(password_hash, []byte(login.Password))
+	err = CompareHashAndPassword(password_hash, login.Password)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	token, err := CreateToken([]byte(login.Username))
+	token, err := utils.CreateToken(login.Username)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	return token, nil
 }
@@ -66,24 +66,8 @@ func hashPassword(password []byte) ([]byte, error) {
 	return hashed_password, nil
 }
 
-func CreateToken(username []byte) ([]byte, error) {
-	claims := jwt.MapClaims{"username": username}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
-
-	// we need to sign the token with the secret
-
-	jwt_secret := []byte("yourMother")
-
-	signedToken, err := token.SignedString(jwt_secret)
-	if err != nil {
-		panic("Not able to sign the token")
-	}
-	return []byte(signedToken), nil
-}
-
-func CompareHashAndPassword(password_hash, password []byte) error {
-	err := bcrypt.CompareHashAndPassword(password_hash, password)
+func CompareHashAndPassword(password_hash, password string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(password_hash), []byte(password))
 	if err != nil {
 		return err
 	}

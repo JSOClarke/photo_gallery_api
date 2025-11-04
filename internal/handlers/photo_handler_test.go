@@ -22,7 +22,7 @@ type MockPhotoService struct {
 const SUCCESS = 7
 const FAILURE = 666
 
-func (ps *MockPhotoService) GetPhoto(param int) ([]byte, string, error) {
+func (ps *MockPhotoService) GetPhoto(param int, username string) ([]byte, string, error) {
 	if param == SUCCESS {
 		return []byte("Jordan"), "image/jpeg", nil
 	}
@@ -35,7 +35,7 @@ func (ps *MockPhotoService) GetAllPhotos(username []byte) ([]repository.GetPhoto
 	if string(username) == "fail" {
 		return []repository.GetPhotosResponse{}, errors.New("Service error")
 	}
-	entry := repository.GetPhotosResponse{Original_file_name: []byte("long_drive")}
+	entry := repository.GetPhotosResponse{Original_file_name: "long_drive"}
 	return []repository.GetPhotosResponse{entry}, nil
 }
 

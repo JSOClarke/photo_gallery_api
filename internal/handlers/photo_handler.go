@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"photogallery/internal/models"
 	"photogallery/internal/services"
@@ -20,44 +19,52 @@ func NewPhotoHandler(service *services.PhotoService) *PhotoHandler {
 
 func (ph *PhotoHandler) GetAllPhotos(c *gin.Context) {
 
-	val, exists := c.Get("claims")
-	if exists == false {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "token claims do not exist"})
+	claims, exist := c.Get("claims")
+
+	if !exist {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Token is missing or expired"})
+	}
+	username := claims.(models.Claims).Username
+	if username == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "username missing from jwt claim"})
 		return
 	}
-	claims := val.(models.Claims)
-	username := claims.Username
 	service, err := ph.Service.GetAllPhotos([]byte(username))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	service_json, err := json.Marshal(service)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, service_json)
+	c.JSON(http.StatusOK, service)
 }
 
 // Gets the given photo from the database by provided ID pararm
 func (ph *PhotoHandler) GetPhoto(c *gin.Context) {
 	id, isFound := c.Params.Get("id")
 
-	if isFound == false {
+	if !isFound {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect parameter passed"})
 		return
 	}
-
 	id_int, err := strconv.Atoi(id)
+
+	claims, exist := c.Get("claims")
+
+	if !exist {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Token is missing or expired"})
+	}
+	username := claims.(models.Claims).Username
+	if username == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "username missing from jwt claim"})
+		return
+	}
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	data, contentType, err := ph.Service.GetPhoto(id_int)
+	data, contentType, err := ph.Service.GetPhoto(id_int, username)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -66,9 +73,5 @@ func (ph *PhotoHandler) GetPhoto(c *gin.Context) {
 	//Set Headers for the binary data sent back
 	c.Writer.Header().Set("Content-type", contentType)
 	c.Data(http.StatusOK, contentType, data)
-
-}
-
-func (ph *PhotoHandler) GetPhotos(c *gin.Context) {
 
 }

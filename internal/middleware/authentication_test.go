@@ -3,6 +3,8 @@ package middleware
 import (
 	"fmt"
 	"net/http/httptest"
+	"photogallery/internal/models"
+	"photogallery/internal/utils"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -10,13 +12,21 @@ import (
 )
 
 func TestAuthenticationMiddleware(t *testing.T) {
+	username := "golden_user"
+	token, err := utils.CreateToken(username)
+	if err != nil {
+		t.Error("not able to create token")
+	}
+	header_value := fmt.Sprint("Bearer ", token)
+	// fmt.Println(header_value)
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	req := httptest.NewRequest("GET", "/protected", nil)
-	req.Header.Set("Authorization", "Bearer ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjFjMlZ5Ym1GdFpTSTZJbG95T1hOYVIxWjFXRE5XZWxwWVNUMGlmUS4yTnk1TEhjaXFGWlVJLVV6VVRBakRxbUxXZllJMFB1NFp2VXJYZGl0Z3NzdUV0U0dCSU1vVHZxZ3lBOWp1TGxDdmVlODJzNElERF9LOGdyaFQzb2dCZw==")
+	req.Header.Set("Authorization", header_value)
 	c.Request = req
 	Authentication(c)
 	val, exists := c.Get("claims")
+
 	assert.True(t, exists)
-	fmt.Println("val", val)
+	assert.Equal(t, username, val.(models.Claims).Username)
 }

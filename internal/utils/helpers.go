@@ -50,11 +50,12 @@ func CreateToken(username string) (string, error) {
 	// we need to sign the token with the secret
 
 	jwt_secret := os.Getenv("JWT_SECRET")
-	fmt.Println("jwt_secret", jwt_secret)
 
 	signedToken, err := token.SignedString([]byte(jwt_secret))
 	if err != nil {
 		panic("Not able to sign the token")
 	}
+	fmt.Println("token", signedToken)
+
 	return signedToken, nil
 }

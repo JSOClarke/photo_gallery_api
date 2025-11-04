@@ -10,7 +10,7 @@ type UserRepo struct {
 
 type UserRepoInterface interface {
 	CreateUser(username, password string) ([]byte, error)
-	LoginUser(username string) ([]byte, error)
+	LoginUser(username string) (string, error)
 }
 
 func NewRepoService(s *sql.DB) *UserRepo {
@@ -32,16 +32,16 @@ func (us *UserRepo) CreateUser(username, password_hash string) ([]byte, error) {
 
 	return res, nil
 }
-func (us *UserRepo) LoginUser(username string) ([]byte, error) {
+func (us *UserRepo) LoginUser(username string) (string, error) {
 
 	row := us.DB.QueryRow("SELECT password_hash from users where username=$1", username)
 
-	var res []byte
+	var password_hash string
 
-	err := row.Scan(&res)
+	err := row.Scan(&password_hash)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return res, nil
+	return password_hash, nil
 }
