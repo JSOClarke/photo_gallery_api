@@ -4,8 +4,6 @@ import (
 	"photogallery/internal/models"
 	"photogallery/internal/repository"
 	"photogallery/internal/utils"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserServiceInterface interface {
@@ -22,7 +20,7 @@ func NewUserService(repo *repository.UserRepo) *UserService {
 }
 
 func (us *UserService) CreateUser(login models.LoginRequest) ([]byte, error) {
-	hashed_password, err := hashPassword([]byte(login.Password))
+	hashed_password, err := utils.HashBinaryData([]byte(login.Password), 10)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +42,7 @@ func (us *UserService) LoginUser(login models.LoginRequest) (string, error) {
 		return "", err
 	}
 
-	err = CompareHashAndPassword(password_hash, login.Password)
+	err = utils.CompareHashAndPassword(password_hash, login.Password)
 	if err != nil {
 		return "", err
 	}
@@ -53,23 +51,4 @@ func (us *UserService) LoginUser(login models.LoginRequest) (string, error) {
 		return "", err
 	}
 	return token, nil
-}
-
-func hashPassword(password []byte) ([]byte, error) {
-
-	hash_cost := 10
-
-	hashed_password, err := bcrypt.GenerateFromPassword(password, hash_cost)
-	if err != nil {
-		return nil, err
-	}
-	return hashed_password, nil
-}
-
-func CompareHashAndPassword(password_hash, password string) error {
-	err := bcrypt.CompareHashAndPassword([]byte(password_hash), []byte(password))
-	if err != nil {
-		return err
-	}
-	return nil
 }

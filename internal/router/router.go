@@ -19,12 +19,9 @@ func RegisterRoutes(r *gin.Engine, userHandler *handlers.UserHandler, photoHandl
 		photos := v1.Group("/photos", middleware.Authentication)
 		{
 			photos.POST("/upload")
-
+			photos.POST("/transform/:id")
 			photos.GET("/images", photoHandler.GetAllPhotos)
 			photos.GET("/image/:id", photoHandler.GetPhoto)
-			photos.POST("/transform/:id")
-
 		}
 	}
-
 }

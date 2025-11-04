@@ -9,6 +9,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Create a model and tests for this.
@@ -58,4 +59,21 @@ func CreateToken(username string) (string, error) {
 	fmt.Println("token", signedToken)
 
 	return signedToken, nil
+}
+
+func HashBinaryData(data []byte, hash_cost int) ([]byte, error) {
+
+	hashed_password, err := bcrypt.GenerateFromPassword(data, hash_cost)
+	if err != nil {
+		return nil, err
+	}
+	return hashed_password, nil
+}
+
+func CompareHashAndPassword(data, original_data string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(data), []byte(original_data))
+	if err != nil {
+		return err
+	}
+	return nil
 }

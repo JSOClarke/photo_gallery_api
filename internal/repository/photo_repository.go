@@ -26,7 +26,7 @@ type GetPhotoFilenameResponse struct {
 }
 
 func (pr *PhotoRepo) GetPhotoFilename(id int, username string) (*GetPhotoFilenameResponse, error) {
-	row := pr.DB.QueryRow("SELECT Hashed_Filename FROM photos WHERE owned_by=$1 AND id=$2", username, id)
+	row := pr.DB.QueryRow("SELECT file_name_hash FROM photos WHERE owned_by=$1 AND id=$2", username, id)
 
 	var response GetPhotoFilenameResponse
 	err := row.Scan(&response.Hashed_Filename)
@@ -40,7 +40,7 @@ func (pr *PhotoRepo) GetPhotoFilename(id int, username string) (*GetPhotoFilenam
 }
 
 func (pr *PhotoRepo) GetPhotos(username []byte) ([]GetPhotosResponse, error) {
-	rows, err := pr.DB.Query("SELECT Hashed_Filename FROM photos WHERE owned_by=$1", username)
+	rows, err := pr.DB.Query("SELECT original_filename FROM photos WHERE owned_by=$1", username)
 	if err != nil {
 		return nil, err
 	}

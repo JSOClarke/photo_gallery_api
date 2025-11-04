@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"photogallery/internal/models"
+	"photogallery/internal/utils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,7 +29,7 @@ func (mr *MockRepo) LoginUser(username string) (string, error) {
 	if username == "fail" {
 		return "", errors.New("username not found")
 	}
-	token, err := hashPassword([]byte("securepassword"))
+	token, err := utils.HashBinaryData([]byte("securepassword"), 10)
 	if err != nil {
 		return "", err
 	}
@@ -85,7 +86,7 @@ func TestLoginUser_SUCCESS(t *testing.T) {
 func TestPasswordHash(t *testing.T) {
 
 	password_plain := "securepassword"
-	res, _ := hashPassword([]byte(password_plain))
+	res, _ := utils.HashBinaryData([]byte(password_plain), 10)
 
 	assert.NotEqual(t, password_plain, res)
 	assert.NoError(t, bcrypt.CompareHashAndPassword(res, []byte(password_plain)))

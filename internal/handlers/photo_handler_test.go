@@ -3,10 +3,12 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"photogallery/internal/models"
 	"photogallery/internal/repository"
+	"photogallery/internal/services"
 	"testing"
 	"time"
 
@@ -29,6 +31,9 @@ func (ps *MockPhotoService) GetPhoto(param int, username string) ([]byte, string
 
 	return []byte{}, "", errors.New("No image found")
 }
+func (ps *MockPhotoService) UploadPhotos(files []*multipart.FileHeader) (string, error) {
+	return "done", nil
+}
 
 func (ps *MockPhotoService) GetAllPhotos(username []byte) ([]repository.GetPhotosResponse, error) {
 	ps.Called = true
@@ -39,7 +44,7 @@ func (ps *MockPhotoService) GetAllPhotos(username []byte) ([]repository.GetPhoto
 	return []repository.GetPhotosResponse{entry}, nil
 }
 
-func TestGetPhoto_SUCCESS(t *testing.T) {
+func TestGetPhoto(t *testing.T) {
 	// r := gin.Default()
 	mockService := MockPhotoService{}
 	photoHandlerx := PhotoHandler{Service: &mockService}
@@ -48,7 +53,15 @@ func TestGetPhoto_SUCCESS(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Params = gin.Params{gin.Param{Key: "id", Value: fmt.Sprint(SUCCESS)}}
-	req := &http.Request{}
+	claims := models.Claims{
+		Username: "Jordan",
+		RegisteredClaims: jwt.RegisteredClaims{
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+		},
+	}
+	c.Set("claims", claims)
+	req := httptest.NewRequest("GET", "/testGetPhoto/1", nil)
 	c.Request = req
 	//	The body response with the image
 	// The fake write object that will record what is being written inside like the body etc
@@ -57,6 +70,7 @@ func TestGetPhoto_SUCCESS(t *testing.T) {
 
 	assert.Equal(t, 200, w.Code)
 	assert.Equal(t, "image/jpeg", w.Header().Get("Content-type"))
+	fmt.Println("image", w.Body)
 
 }
 func TestGetPhoto_Failure(t *testing.T) {
@@ -122,4 +136,22 @@ func TestGetAllPhoto_SUCCESS(t *testing.T) {
 	fmt.Println("Response:", w.Body.String())
 }
 
-// we are able to create gin test.contexts so that we dont have to deal with router.
+func TestPhotoHandler_UploadPhoto(t *testing.T) {
+
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for receiver constructor.
+		service *services.PhotoService
+		// Named input parameters for target function.
+		c *gin.Context
+	}{
+		// TODO: Add test cases.
+
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ph := NewPhotoHandler(tt.service)
+			ph.UploadPhoto(tt.c)
+		})
+	}
+}
